@@ -1,6 +1,6 @@
 import React, {  ReactNode, MouseEvent, useEffect, useRef }from "react";
 import { createPortal } from "react-dom";
-import "../App.css";
+
 
 
 interface ModalProps  {
@@ -12,51 +12,44 @@ interface ModalProps  {
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
 
-
-
-    const modalRoot = document.getElementById("modal-root");
-    const contentRef = useRef<HTMLDivElement>(null);
-
-
-    useEffect (() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                onClose();
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [onClose]);
+    const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (isOpen && contentRef.current) {
-            contentRef.current.focus();
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                onClose();
+            }
         }
-    }, [isOpen]);
 
-        const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget) {
+        if (isOpen) {
+            document.addEventListener("keydown", handleEscape);
+            modalRef.current?.focus();
+        }
+
+        return () => {
+            document.removeEventListener("keydown", handleEscape);
+        };
+
+    }, [isOpen, onClose]);
+
+    const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget) {
             onClose();
         }
     };
 
-    if (!isOpen || !modalRoot) return null;
+    if (!isOpen) return null;
 
-
-    return createPortal (
+    return createPortal(
         <div className="modal-backdrop" onClick={handleBackdropClick}>
-            <div className="modal-content">
-                <button onClick={onClose}>Close</button>
+            <div className="modal-content" ref={modalRef} tabIndex={-1}>
                 {children}
             </div>
         </div>,
-        modalRoot
+        document.getElementById("modal-root")!
     );
-}
-
+};
 
 export default Modal;
+
+   
